@@ -4,6 +4,7 @@ from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
 from lesson_functions import *
 from sklearn.model_selection import train_test_split
+from sklearn.externals import joblib
 
 # Read in cars and notcars
 cars = glob.glob('vehicles_smallset/cars[0-9]/*.jpeg')
@@ -61,3 +62,5 @@ t2 = time.time()
 print(round(t2-t, 2), 'Seconds to train SVC...')
 # Check the score of the SVC
 print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
+
+joblib.dump(svc, 'car_classifier.pkl')
