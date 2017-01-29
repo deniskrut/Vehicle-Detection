@@ -2,7 +2,7 @@ import glob
 import time
 from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
-from lesson_functions import *
+from helper_functions import *
 from sklearn.model_selection import train_test_split
 from sklearn.externals import joblib
 
@@ -21,18 +21,19 @@ spatial_feat = True # Spatial features on or off
 hist_feat = True # Histogram features on or off
 hog_feat = True # HOG features on or off
 
+
 car_features = extract_features(cars, color_space=color_space,
-                        spatial_size=spatial_size, hist_bins=hist_bins,
-                        orient=orient, pix_per_cell=pix_per_cell,
-                        cell_per_block=cell_per_block,
-                        hog_channel=hog_channel, spatial_feat=spatial_feat,
-                        hist_feat=hist_feat, hog_feat=hog_feat)
+                                spatial_size=spatial_size, hist_bins=hist_bins,
+                                orient=orient, pix_per_cell=pix_per_cell,
+                                cell_per_block=cell_per_block,
+                                hog_channel=hog_channel, spatial_feat=spatial_feat,
+                                hist_feat=hist_feat, hog_feat=hog_feat)
 notcar_features = extract_features(notcars, color_space=color_space,
-                        spatial_size=spatial_size, hist_bins=hist_bins,
-                        orient=orient, pix_per_cell=pix_per_cell,
-                        cell_per_block=cell_per_block,
-                        hog_channel=hog_channel, spatial_feat=spatial_feat,
-                        hist_feat=hist_feat, hog_feat=hog_feat)
+                                   spatial_size=spatial_size, hist_bins=hist_bins,
+                                   orient=orient, pix_per_cell=pix_per_cell,
+                                   cell_per_block=cell_per_block,
+                                   hog_channel=hog_channel, spatial_feat=spatial_feat,
+                                   hist_feat=hist_feat, hog_feat=hog_feat)
 
 X = np.vstack((car_features, notcar_features)).astype(np.float64)
 # Fit a per-column scaler
@@ -63,3 +64,5 @@ print(round(t2-t, 2), 'Seconds to train SVC...')
 print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
 
 joblib.dump(svc, 'car_classifier.pkl')
+joblib.dump(X_scaler, 'feature_scaler.pkl')
+
