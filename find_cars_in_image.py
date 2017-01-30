@@ -50,7 +50,9 @@ def find_cars_in_image(image, prev_hot_windows=deque([])):
     for cur_hot_windows in prev_hot_windows:
         add_heat(heatmap, cur_hot_windows)
 
-    heatmap = apply_threshold(heatmap, 3)
+    heat_threshold = len(prev_hot_windows) * 2
+
+    heatmap = apply_threshold(heatmap, heat_threshold)
 
     labels = label(heatmap)
 
