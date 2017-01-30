@@ -1,7 +1,6 @@
-from find_cars_in_image import *
-
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+
+from find_cars_in_image import *
 
 image = mpimg.imread('test_images/test6.jpg')
 

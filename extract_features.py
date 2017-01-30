@@ -1,4 +1,7 @@
+import matplotlib.image as mpimg
+
 from helper_functions import *
+
 
 def single_img_features_standard(image):
     color_space = 'HSV'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
@@ -13,11 +16,11 @@ def single_img_features_standard(image):
     hog_feat = True  # HOG features on or off
 
     return single_img_features(image, color_space=color_space,
-                            spatial_size=spatial_size, hist_bins=hist_bins,
-                            orient=orient, pix_per_cell=pix_per_cell,
-                            cell_per_block=cell_per_block,
-                            hog_channel=hog_channel, spatial_feat=spatial_feat,
-                            hist_feat=hist_feat, hog_feat=hog_feat)
+                               spatial_size=spatial_size, hist_bins=hist_bins,
+                               orient=orient, pix_per_cell=pix_per_cell,
+                               cell_per_block=cell_per_block,
+                               hog_channel=hog_channel, spatial_feat=spatial_feat,
+                               hist_feat=hist_feat, hog_feat=hog_feat)
 
 
 # Define a function to extract features from a list of images
@@ -40,20 +43,20 @@ def extract_features_standard(imgs):
 # Define a function you will pass an image
 # and the list of windows to be searched (output of slide_windows())
 def search_windows_standard(img, windows, clf, scaler):
-    #1) Create an empty list to receive positive detection windows
+    # 1) Create an empty list to receive positive detection windows
     on_windows = []
-    #2) Iterate over all windows in the list
+    # 2) Iterate over all windows in the list
     for window in windows:
-        #3) Extract the test window from original image
+        # 3) Extract the test window from original image
         test_img = cv2.resize(img[window[0][1]:window[1][1], window[0][0]:window[1][0]], (64, 64))
-        #4) Extract features for that window using single_img_features()
+        # 4) Extract features for that window using single_img_features()
         features = single_img_features_standard(test_img)
-        #5) Scale extracted features to be fed to classifier
+        # 5) Scale extracted features to be fed to classifier
         test_features = scaler.transform(np.array(features).reshape(1, -1))
-        #6) Predict using your classifier
+        # 6) Predict using your classifier
         prediction = clf.predict(test_features)
-        #7) If positive (prediction == 1) then save the window
+        # 7) If positive (prediction == 1) then save the window
         if prediction == 1:
             on_windows.append(window)
-    #8) Return windows for positive detections
+    # 8) Return windows for positive detections
     return on_windows
