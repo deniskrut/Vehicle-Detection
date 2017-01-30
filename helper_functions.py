@@ -1,4 +1,3 @@
-import matplotlib.image as mpimg
 import numpy as np
 import cv2
 from skimage.feature import hog
