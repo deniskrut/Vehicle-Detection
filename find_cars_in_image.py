@@ -23,28 +23,36 @@ def find_cars_in_image(image, prev_hot_windows=deque([])):
         image_height = image.shape[0]
 
         # Min and max in y to search in slide_window()
-        y_start_stop_64 = [int(image_height * 0.55), int(image_height * 0.7)]
-        y_start_stop_96 = [int(image_height * 0.55), int(image_height * 0.75)]
-        y_start_stop_128 = [int(image_height * 0.55), int(image_height * 0.8)]
-        y_start_stop_192 = [int(image_height * 0.55), int(image_height * 0.9)]
-        y_start_stop_256 = [int(image_height * 0.55), None]
+        y_start_stop_64 = [int(0.55 * image_height), int(0.65 * image_height)]
+        y_start_stop_96 = [int(0.55 * image_height), int(0.7 * image_height)]
+        y_start_stop_128 = [int(0.55 * image_height), int(0.75 * image_height)]
+        y_start_stop_160 = [int(0.55 * image_height), int(0.8 * image_height)]
+        y_start_stop_192 = [int(0.55 * image_height), int(0.85 * image_height)]
+        y_start_stop_224 = [int(0.55 * image_height), int(0.9 * image_height)]
+        y_start_stop_256 = [int(0.55 * image_height), int(0.95 * image_height)]
 
         windows_64 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_64,
-                                  xy_window=(64, 64), xy_overlap=(0.5, 0.5))
+                                  xy_window=(64, 64), xy_overlap=(0.75, 0.75))
         windows_96 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_96,
-                                  xy_window=(96, 96), xy_overlap=(0.5, 0.5))
+                                  xy_window=(96, 96), xy_overlap=(0.6, 0.6))
         windows_128 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_128,
-                                   xy_window=(128, 128), xy_overlap=(0.5, 0.5))
+                                   xy_window=(128, 128), xy_overlap=(0.6, 0.6))
+        windows_160 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_160,
+                                   xy_window=(160, 160), xy_overlap=(0.6, 0.6))
         windows_192 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_192,
-                                   xy_window=(192, 192), xy_overlap=(0.5, 0.5))
+                                   xy_window=(192, 192), xy_overlap=(0.6, 0.6))
+        windows_224 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_224,
+                                   xy_window=(224, 224), xy_overlap=(0.6, 0.6))
         windows_256 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_256,
-                                   xy_window=(256, 256), xy_overlap=(0.5, 0.5))
+                                   xy_window=(256, 256), xy_overlap=(0.6, 0.6))
 
         windows = []
         windows.extend(windows_64)
-        windows.extend(windows_96)
+        # windows.extend(windows_96)
         windows.extend(windows_128)
+        #windows.extend(windows_160)
         windows.extend(windows_192)
+        #windows.extend(windows_224)
         windows.extend(windows_256)
 
         find_cars_in_image_windows = windows
@@ -52,7 +60,7 @@ def find_cars_in_image(image, prev_hot_windows=deque([])):
     hot_windows = search_windows_standard(image, find_cars_in_image_windows, find_cars_in_image_svc,
                                           find_cars_in_image_X_scaler)
 
-    if len(prev_hot_windows) > 30:
+    if len(prev_hot_windows) > 15:
         prev_hot_windows.popleft()
 
     prev_hot_windows.append(hot_windows)
