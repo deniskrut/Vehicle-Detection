@@ -19,7 +19,7 @@ def single_img_features_standard(image):
     orient = 9  # HOG orientations
     pix_per_cell = 16  # HOG pixels per cell
     cell_per_block = 2  # HOG cells per block
-    hog_channel = 0  # Can be 0, 1, 2, or "ALL"
+    hog_channel = "ALL"  # Can be 0, 1, 2, or "ALL"
     hog_feat = True  # HOG features on or off
 
     return single_img_features(image, color_space=color_space,

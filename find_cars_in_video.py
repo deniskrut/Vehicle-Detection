@@ -1,3 +1,5 @@
+from collections import deque
+
 from moviepy.editor import VideoFileClip
 
 from find_cars_in_image import *
