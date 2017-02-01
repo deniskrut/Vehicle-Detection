@@ -9,8 +9,8 @@ from sklearn.svm import LinearSVC
 from extract_features import *
 
 # Read in cars and notcars
-cars = glob.glob('vehicles_smallset/cars[0-9]/*.jpeg')
-notcars = glob.glob('non-vehicles_smallset/notcars[0-9]/*.jpeg')
+cars = glob.glob('vehicles/*/*.png')
+notcars = glob.glob('non-vehicles/*/*.png')
 
 car_features = extract_features_standard(cars)
 notcar_features = extract_features_standard(notcars)
