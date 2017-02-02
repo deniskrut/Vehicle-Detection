@@ -13,7 +13,7 @@ def single_img_features_standard(image):
     spatial_size = (32, 32)  # Spatial binning dimensions
     spatial_feat = True  # Spatial features on or off
 
-    hist_bins = 64  # Number of histogram bins
+    hist_bins = 32  # Number of histogram bins
     hist_feat = True  # Histogram features on or off
 
     orient = 9  # HOG orientations
