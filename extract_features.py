@@ -10,14 +10,14 @@ def single_img_features_standard(image):
 
     color_space = 'YUV'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
 
-    spatial_size = (16, 16)  # Spatial binning dimensions
+    spatial_size = (32, 32)  # Spatial binning dimensions
     spatial_feat = True  # Spatial features on or off
 
     hist_bins = 64  # Number of histogram bins
     hist_feat = True  # Histogram features on or off
 
     orient = 9  # HOG orientations
-    pix_per_cell = 16  # HOG pixels per cell
+    pix_per_cell = 8  # HOG pixels per cell
     cell_per_block = 2  # HOG cells per block
     hog_channel = "ALL"  # Can be 0, 1, 2, or "ALL"
     hog_feat = True  # HOG features on or off
@@ -50,8 +50,7 @@ def extract_features_standard(imgs):
 # Define a function you will pass an image
 # and the list of windows to be searched (output of slide_windows())
 def search_windows_standard(img, windows, clf, scaler):
-    # 1) Create an empty list to receive positive detection windows
-    on_windows = []
+    all_features = []
     # 2) Iterate over all windows in the list
     for window in windows:
         # 3) Extract the test window from original image
@@ -60,10 +59,12 @@ def search_windows_standard(img, windows, clf, scaler):
         features = single_img_features_standard(test_img)
         # 5) Scale extracted features to be fed to classifier
         test_features = scaler.transform(np.array(features).reshape(1, -1))
-        # 6) Predict using your classifier
-        prediction = clf.predict(test_features)
-        # 7) If positive (prediction == 1) then save the window
-        if prediction == 1:
-            on_windows.append(window)
+
+        all_features.extend(test_features)
+
+    predictions = clf.predict(all_features)
+
+    on_windows = np.array(windows)[predictions == 1]
+
     # 8) Return windows for positive detections
     return on_windows
