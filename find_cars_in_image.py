@@ -62,20 +62,21 @@ def find_cars_in_image(image, prev_hot_windows=None):
 
     add_heat(heatmap, hot_windows)
 
-    heat_threshold = 6
+    heat_threshold = 5
 
     if prev_hot_windows is not None:
         look_back_count = 15
 
+        for index, cur_hot_windows in enumerate(prev_hot_windows):
+            amount = index / len(prev_hot_windows)
+            add_heat(heatmap, cur_hot_windows, amount)
+
         if len(prev_hot_windows) > look_back_count:
             prev_hot_windows.popleft()
 
-        for cur_hot_windows in prev_hot_windows:
-            add_heat(heatmap, cur_hot_windows)
-
         prev_hot_windows.append(hot_windows)
 
-        heat_threshold *= look_back_count
+        heat_threshold *= (look_back_count / 2)
 
     heatmap = apply_threshold(heatmap, heat_threshold)
 

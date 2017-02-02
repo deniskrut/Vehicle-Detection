@@ -1,5 +1,5 @@
-import numpy as np
 import cv2
+import numpy as np
 from skimage.feature import hog
 
 
@@ -139,12 +139,12 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
     return window_list
 
 
-def add_heat(heatmap, bbox_list):
+def add_heat(heatmap, bbox_list, amount=1):
     # Iterate through list of bboxes
     for box in bbox_list:
         # Add += 1 for all pixels inside each bbox
         # Assuming each "box" takes the form ((x1, y1), (x2, y2))
-        heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
+        heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += amount
 
     # Return updated heatmap
     return heatmap
