@@ -62,7 +62,7 @@ def find_cars_in_image(image, prev_hot_windows=None):
 
     add_heat(heatmap, hot_windows)
 
-    heat_threshold = 5
+    heat_threshold = 4
 
     if prev_hot_windows is not None:
         look_back_count = 15
