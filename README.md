@@ -102,24 +102,32 @@ from helper_functions import *
 image = mpimg.imread('test_images_2/test3.jpg')
 image_height = image.shape[0]
 
-# Min and max in y to search in slide_window()
-y_start_stop_64 = [int(0.525 * image_height), int(0.7 * image_height)]
-y_start_stop_128 = [int(0.525 * image_height), int(0.75 * image_height)]
-y_start_stop_192 = [int(0.525 * image_height), int(0.8 * image_height)]
-y_start_stop_256 = [int(0.525 * image_height), int(0.9 * image_height)]
-y_start_stop_320 = [int(0.525 * image_height), int(1 * image_height)]
+        # Min and max in y to search in slide_window()
+        y_start_stop_64 = [int(0.525 * image_height), int(0.7 * image_height)]
+        y_start_stop_128 = [int(0.525 * image_height), int(0.75 * image_height)]
+        y_start_stop_192 = [int(0.525 * image_height), int(0.8 * image_height)]
+        y_start_stop_256 = [int(0.525 * image_height), int(0.9 * image_height)]
+        y_start_stop_320 = [int(0.525 * image_height), int(1 * image_height)]
 
-# Obtain windows given set of parameters
-windows_64 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_64,
-                          xy_window=(64, 64), xy_overlap=(0.75, 0.5))
-windows_128 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_128,
-                           xy_window=(128, 128), xy_overlap=(0.65, 0.5))
-windows_192 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_192,
-                           xy_window=(192, 192), xy_overlap=(0.6, 0.5))
-windows_256 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_256,
-                           xy_window=(256, 256), xy_overlap=(0.6, 0.5))
-windows_320 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_320,
-                           xy_window=(320, 320), xy_overlap=(0.6, 0.5))
+        # Obtain windows given set of parameters
+        windows_64 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_64,
+                                  xy_window=(64, 64), xy_overlap=(0.85, 0.5))
+        windows_128 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_128,
+                                   xy_window=(128, 128), xy_overlap=(0.65, 0.5))
+        windows_192 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_192,
+                                   xy_window=(192, 192), xy_overlap=(0.6, 0.5))
+        windows_256 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_256,
+                                   xy_window=(256, 256), xy_overlap=(0.6, 0.5))
+        windows_320 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_320,
+                                   xy_window=(320, 320), xy_overlap=(0.6, 0.5))
+
+        # Store all windows
+        windows = []
+        windows.extend(windows_64)
+        windows.extend(windows_128)
+        windows.extend(windows_192)
+        windows.extend(windows_256)
+        windows.extend(windows_320)
 ```
 
 `slide_window` function outputs bounding boxes for windows with corresponding parameters.
@@ -213,8 +221,8 @@ Here's an example result showing the heatmap and bounding boxes overlaid on a fr
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Detection accuracy was not best, so I had to compensate by handpicking parameters and extensively using history. Handpicking parameters may fail in real world, and history needs multiple frames to kick in. Also, each frame takes at least half a second to produce on my machine, which is not acceptable in production.
+Detection accuracy was not best for the video, so I had to compensate by handpicking parameters and extensively using history. Handpicking parameters may fail in real world, and history needs multiple frames to kick in. Also, each frame takes at least half a second to produce on my machine, which is not acceptable in production.
 
 In real world U-net seem to be a great idea. They are fast and very accurate.
 
-Another idea is to augment the data we have by adding and removing light, stretching, etc. This should make it work better on the video.
+Another idea is to augment the data we have by adding and removing light, stretching, etc. This should make it work better on the video. Finally, I could try using different data set in addition to the current ones. [Udacity annotated driving data set](https://github.com/udacity/self-driving-car/tree/master/annotations) seem to be a better match in terms of lighting conditions at least.
