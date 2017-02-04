@@ -37,7 +37,7 @@ def find_cars_in_image(image, prev_hot_windows=None):
 
         # Obtain windows given set of parameters
         windows_64 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_64,
-                                  xy_window=(64, 64), xy_overlap=(0.75, 0.5))
+                                  xy_window=(64, 64), xy_overlap=(0.85, 0.5))
         windows_128 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_128,
                                    xy_window=(128, 128), xy_overlap=(0.65, 0.5))
         windows_192 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_192,
@@ -114,5 +114,10 @@ def find_cars_in_image(image, prev_hot_windows=None):
     # Draw labeled bounding boxes based on labels
     window_img = draw_labeled_bboxes(image, labels)
 
+    heatmap_overlay = np.uint8(
+        np.dstack([(heatmap / np.max([np.max(heatmap), 1])) * 255, np.zeros_like(heatmap), np.zeros_like(heatmap)]))
+
+    window_img_heatmap = cv2.addWeighted(window_img, 1, heatmap_overlay, .5, 0)
+
     # Return resulting image and previous hot windows
-    return window_img, prev_hot_windows
+    return window_img_heatmap, prev_hot_windows
