@@ -77,7 +77,7 @@ def find_cars_in_image(image, prev_hot_windows=None):
     # If we a processing a video, we might have hot windows information from previous frames
     if prev_hot_windows is not None:
         # We look back 30 frames.
-        # It is a lot, but I use heatmap cooling to negate negative effect of too many look back frames.
+        # It is a lot, but I use heat map cooling to negate negative effect of too many look back frames.
         look_back_count = 30
 
         # Iterate through each historical hot window
@@ -85,13 +85,13 @@ def find_cars_in_image(image, prev_hot_windows=None):
             # Cooling function: sine loss of heat to give newer frames higher value
             amount = math.sin((math.pi / 2) * (index / len(prev_hot_windows)))
 
-            # Allocate new heatmap
+            # Allocate new heat map
             current_heatmap = np.zeros_like(image[:, :, 0]).astype(np.float)
-            # Add heat to the heatmap
+            # Add heat to the heat map
             add_heat(current_heatmap, cur_hot_windows, amount)
-            # Take square root of heatmap to reduce potential influence of one frame
+            # Take square root of heat map to reduce potential influence of one frame
             current_heatmap = np.sqrt(current_heatmap)
-            # Add current heatmap to heatmap of this frame
+            # Add current heat map to heat map of this frame
             heatmap += current_heatmap
 
         # If we accumulated too many frames, remove one
@@ -111,15 +111,7 @@ def find_cars_in_image(image, prev_hot_windows=None):
     labels = label(heatmap_thresholded)
 
     # Draw labeled bounding boxes based on labels
-    # window_img = draw_labeled_bboxes(image, labels)
-
-    heatmap_overlay = np.uint8(
-        np.dstack([(heatmap / np.max([np.max(heatmap), 1])) * 255, np.zeros_like(heatmap), np.zeros_like(heatmap)]))
-
-    # window_img_heatmap = cv2.addWeighted(window_img, 1, heatmap_overlay, .5, 0)
-
-    for hot_window in hot_windows:
-        cv2.rectangle(image, hot_window[0], hot_window[1], (0, 255, 0), 4)
+    window_img = draw_labeled_bboxes(image, labels)
 
     # Return resulting image and previous hot windows
-    return image, prev_hot_windows
+    return window_img, prev_hot_windows

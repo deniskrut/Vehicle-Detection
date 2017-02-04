@@ -157,13 +157,52 @@ Here's a [link to my video result](./project_video.mp4)
 
 ####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
-TODO
+To filter false positives for video I used hot window history from previous frames. I took last 30 frames and produced weighted average for square roots of heat maps. Result of this operation was used as a new heat map.
 
-I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then threshold that map to identify vehicle positions.  I then used blob detection in Sci-kit Image (Determinant of a Hessian [`skimage.feature.blob_doh()`](http://scikit-image.org/docs/dev/auto_examples/plot_blob.html) worked best for me) to identify individual blobs in the heatmap and then determined the extent of each blob using [`skimage.morphology.watershed()`](http://scikit-image.org/docs/dev/auto_examples/plot_watershed.html). I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
+For a weighted average I used sine function, since I wanted more recent frames to have greater influence then older ones. This helped me to smooth the bounding box jarring and reject false positives that are only present on a few frames, but not the rest of them.
+
+In order to mitigate influence of one frame on the final outcome, I have applied a square root to the feat maps. This assures that there is no one super-confident frame that will introduce false positive, even though there is no detections in that area in consecutive frames.
+
+Code for this feature can be found in the `find_cars_in_image` function, file `find_cars_in_image.py`.
+
+```python
+import math
+from helper_functions import *
+
+# If we a processing a video, we might have hot windows information from previous frames
+if prev_hot_windows is not None:
+    # We look back 30 frames.
+    # It is a lot, but I use heat map cooling to negate negative effect of too many look back frames.
+    look_back_count = 30
+
+    # Iterate through each historical hot window
+    for index, cur_hot_windows in enumerate(prev_hot_windows):
+        # Cooling function: sine loss of heat to give newer frames higher value
+        amount = math.sin((math.pi / 2) * (index / len(prev_hot_windows)))
+
+        # Allocate new heat map
+        current_heatmap = np.zeros_like(image[:, :, 0]).astype(np.float)
+        # Add heat to the heat map
+        add_heat(current_heatmap, cur_hot_windows, amount)
+        # Take square root of heat map to reduce potential influence of one frame
+        current_heatmap = np.sqrt(current_heatmap)
+        # Add current heat map to heat map of this frame
+        heatmap += current_heatmap
+
+    # If we accumulated too many frames, remove one
+    if len(prev_hot_windows) > look_back_count:
+        prev_hot_windows.popleft()
+
+    # Append current frame to the list of previous hot frames
+    prev_hot_windows.append(hot_windows)
+
+    # Adjust threshold to accommodate added heat
+    heat_threshold *= look_back_count
+```
 
 Here's an example result showing the heatmap and bounding boxes overlaid on a frame of video:
 
-![alt text][image5]
+![Hetmap in video frame][image5]
 
 ---
 
@@ -171,7 +210,8 @@ Here's an example result showing the heatmap and bounding boxes overlaid on a fr
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-TODO
+Detection accuracy was not best, so I had to compensate by handpicking parameters and extensively using history. Handpicking parameters may fail in real world, and history needs multiple frames to kick in. Also, each frame takes at least half a second to produce on my machine, which is not acceptable in production.
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+In real world U-net seem to be a great idea. They are fast and very accurate.
 
+Another idea is to augment the data we have by adding and removing light, stretching, etc. This should make it work better on the video.
