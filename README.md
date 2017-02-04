@@ -60,7 +60,7 @@ I've estimated the classification performance of given set of parameters by trai
 
 Following parameters produced best classification accuracy, so these are my final parameters:
 
-```
+```python
 orient = 9          # HOG orientations
 pix_per_cell = 8    # HOG pixels per cell
 cell_per_block = 2  # HOG cells per block
@@ -87,6 +87,45 @@ Finally, I saved scaler and SVM model to the files using `joblib`.
 ####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
 Observing the video I noticed that cars that are far away tend to be located toward the middle of the image height-wise, while cars that are closer to the camera can span between the middle of the image height-wise and the bottom of the image. So I located my sliding windows respectively.
+
+I've obtained a few images from the video where my pipeline had most problems, and tried to optimize those by changing the sliding windows. Another variable I was trying to optimize was execution time. It was clear that adding more windows created a lot of overhead.
+
+I've started with sizes `64x64`, `96x96`, `128x128`, `160x160`, `192x192`, `224x224` and `256x256` and overlap `0.5`. That produced good results, but it missed some smallest and largest cars. I was able to improve it by increasing horizontal overlap to `0.75` for smallest windows, and adding size `320x320`. However at that point execution time started to suffer - it could take two and a half hours to produce the project view.
+
+As a next step, I've tried to reduce number of window and overlaps to improve execution time. I've noticed that bigger windows needed smaller overlaps to perform well, and that I can also reduce number of different sizes without loosing detection quality.
+
+Code for this procedure is located in the `find_cars_in_image` function, `file_cars_in_image.py` file. This function uses caching for SVM, Scaler and sliding windows to improve performance. On the first execution of the function I read SVM and scaler from files and generate sliding windows. In order to generate sliding windows I assign sizes, search areas and overlaps. Here is what these parameters look like:
+
+```python
+import matplotlib.image as mpimg
+from helper_functions import *
+
+image = mpimg.imread('test_images_2/test3.jpg')
+image_height = image.shape[0]
+
+# Min and max in y to search in slide_window()
+y_start_stop_64 = [int(0.525 * image_height), int(0.7 * image_height)]
+y_start_stop_128 = [int(0.525 * image_height), int(0.75 * image_height)]
+y_start_stop_192 = [int(0.525 * image_height), int(0.8 * image_height)]
+y_start_stop_256 = [int(0.525 * image_height), int(0.9 * image_height)]
+y_start_stop_320 = [int(0.525 * image_height), int(1 * image_height)]
+
+# Obtain windows given set of parameters
+windows_64 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_64,
+                          xy_window=(64, 64), xy_overlap=(0.75, 0.5))
+windows_128 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_128,
+                           xy_window=(128, 128), xy_overlap=(0.65, 0.5))
+windows_192 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_192,
+                           xy_window=(192, 192), xy_overlap=(0.6, 0.5))
+windows_256 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_256,
+                           xy_window=(256, 256), xy_overlap=(0.6, 0.5))
+windows_320 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_320,
+                           xy_window=(320, 320), xy_overlap=(0.6, 0.5))
+```
+
+Next I search for windows using `search_windows_standard` function form `extract_features.py` file. This function for each window obtains a scaled image, extract features for that image, and forms an array of all features extracted for all windows. Then, using SVM, function performs prediction. Array of windows where cars are predicted is returned from the function.
+
+TODO
 
 In order to combat false positives I've tried to use many windows with `0.75` overlap. That gave me a huge performance hit - one video generation took 2 and a half hours. But it also did not produce desired result - windows of different sizes seem to agree where they see a car. This is probably due to some scaling used in the dataset.
 

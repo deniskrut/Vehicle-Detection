@@ -3,9 +3,9 @@ import matplotlib.image as mpimg
 from helper_functions import *
 
 
-# Obtains a feature vectur using preselected set of parameters
+# Obtains a feature vector using preselected set of parameters
 def single_img_features_standard(image):
-    # Standartize images to be floats
+    # Standartize images to be uint8 data type
     if isinstance(image[0][0][0], np.float32):
         image = np.uint8(image * 255)
 

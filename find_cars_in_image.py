@@ -16,7 +16,7 @@ def find_cars_in_image(image, prev_hot_windows=None):
     # Load caches
     global find_cars_in_image_windows, find_cars_in_image_svc, find_cars_in_image_X_scaler
 
-    # Rehidrate caches if needed
+    # Rehydrate caches if needed
     if find_cars_in_image_svc is None:
         # Load classifier from file
         find_cars_in_image_svc = joblib.load('car_classifier.pkl')
@@ -30,45 +30,29 @@ def find_cars_in_image(image, prev_hot_windows=None):
 
         # Min and max in y to search in slide_window()
         y_start_stop_64 = [int(0.525 * image_height), int(0.7 * image_height)]
-        y_start_stop_96 = [int(0.525 * image_height), int(0.725 * image_height)]
         y_start_stop_128 = [int(0.525 * image_height), int(0.75 * image_height)]
-        y_start_stop_160 = [int(0.525 * image_height), int(0.775 * image_height)]
         y_start_stop_192 = [int(0.525 * image_height), int(0.8 * image_height)]
-        y_start_stop_224 = [int(0.525 * image_height), int(0.85 * image_height)]
         y_start_stop_256 = [int(0.525 * image_height), int(0.9 * image_height)]
-        y_start_stop_288 = [int(0.525 * image_height), int(0.95 * image_height)]
         y_start_stop_320 = [int(0.525 * image_height), int(1 * image_height)]
 
         # Obtain windows given set of parameters
         windows_64 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_64,
                                   xy_window=(64, 64), xy_overlap=(0.75, 0.5))
-        windows_96 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_96,
-                                  xy_window=(96, 96), xy_overlap=(0.7, 0.5))
         windows_128 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_128,
                                    xy_window=(128, 128), xy_overlap=(0.65, 0.5))
-        windows_160 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_160,
-                                   xy_window=(160, 160), xy_overlap=(0.6, 0.5))
         windows_192 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_192,
                                    xy_window=(192, 192), xy_overlap=(0.6, 0.5))
-        windows_224 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_224,
-                                   xy_window=(224, 224), xy_overlap=(0.6, 0.5))
         windows_256 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_256,
                                    xy_window=(256, 256), xy_overlap=(0.6, 0.5))
-        windows_288 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_288,
-                                   xy_window=(288, 288), xy_overlap=(0.6, 0.5))
         windows_320 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_320,
                                    xy_window=(320, 320), xy_overlap=(0.6, 0.5))
 
         # Store all windows
         windows = []
         windows.extend(windows_64)
-        # windows.extend(windows_96)
         windows.extend(windows_128)
-        # windows.extend(windows_160)
         windows.extend(windows_192)
-        #windows.extend(windows_224)
         windows.extend(windows_256)
-        # windows.extend(windows_288)
         windows.extend(windows_320)
 
         # Store windows in cache
@@ -91,10 +75,10 @@ def find_cars_in_image(image, prev_hot_windows=None):
     heat_threshold = 1
 
     # If we a processing a video, we might have hot windows information from previous frames
-    if prev_hot_windows is not None and len(prev_hot_windows) > 0:
-        # We look back 60 frames.
+    if prev_hot_windows is not None:
+        # We look back 30 frames.
         # It is a lot, but I use heatmap cooling to negate negative effect of too many look back frames.
-        look_back_count = 60
+        look_back_count = 30
 
         # Iterate through each historical hot window
         for index, cur_hot_windows in enumerate(prev_hot_windows):

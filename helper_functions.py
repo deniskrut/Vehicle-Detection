@@ -7,7 +7,7 @@ from skimage.feature import hog
 def get_hog_features(img, orient, pix_per_cell, cell_per_block,
                      vis=False, feature_vec=True):
     # Call with two outputs if vis==True
-    if vis == True:
+    if vis:
         features, hog_image = hog(img, orientations=orient,
                                   pixels_per_cell=(pix_per_cell, pix_per_cell),
                                   cells_per_block=(cell_per_block, cell_per_block),
@@ -51,9 +51,9 @@ def single_img_features(img, color_space='RGB', spatial_size=(32, 32),
                         hist_bins=32, orient=9,
                         pix_per_cell=8, cell_per_block=2, hog_channel=0,
                         spatial_feat=True, hist_feat=True, hog_feat=True):
-    #1) Define an empty list to receive features
+    # 1) Define an empty list to receive features
     img_features = []
-    #2) Apply color conversion if other than 'RGB'
+    # 2) Apply color conversion if other than 'RGB'
     if color_space != 'RGB':
         if color_space == 'HSV':
             feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
@@ -65,32 +65,33 @@ def single_img_features(img, color_space='RGB', spatial_size=(32, 32),
             feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
         elif color_space == 'YCrCb':
             feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
-    else: feature_image = np.copy(img)
-    #3) Compute spatial features if flag is set
-    if spatial_feat == True:
+    else:
+        feature_image = np.copy(img)
+    # 3) Compute spatial features if flag is set
+    if spatial_feat:
         spatial_features = bin_spatial(feature_image, size=spatial_size)
-        #4) Append features to list
+        # 4) Append features to list
         img_features.append(spatial_features)
-    #5) Compute histogram features if flag is set
-    if hist_feat == True:
+    # 5) Compute histogram features if flag is set
+    if hist_feat:
         hist_features = color_hist(feature_image, nbins=hist_bins)
-        #6) Append features to list
+        # 6) Append features to list
         img_features.append(hist_features)
-    #7) Compute HOG features if flag is set
-    if hog_feat == True:
+    # 7) Compute HOG features if flag is set
+    if hog_feat:
         if hog_channel == 'ALL':
             hog_features = []
             for channel in range(feature_image.shape[2]):
-                hog_features.extend(get_hog_features(feature_image[:,:,channel],
-                                    orient, pix_per_cell, cell_per_block,
-                                    vis=False, feature_vec=True))
+                hog_features.extend(get_hog_features(feature_image[:, :, channel],
+                                                     orient, pix_per_cell, cell_per_block,
+                                                     vis=False, feature_vec=True))
         else:
-            hog_features = get_hog_features(feature_image[:,:,hog_channel], orient,
-                        pix_per_cell, cell_per_block, vis=False, feature_vec=True)
-        #8) Append features to list
+            hog_features = get_hog_features(feature_image[:, :, hog_channel], orient,
+                                            pix_per_cell, cell_per_block, vis=False, feature_vec=True)
+        # 8) Append features to list
         img_features.append(hog_features)
 
-    #9) Return concatenated array of features
+    # 9) Return concatenated array of features
     return np.concatenate(img_features)
 
 
@@ -101,13 +102,13 @@ def single_img_features(img, color_space='RGB', spatial_size=(32, 32),
 def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
                  xy_window=(64, 64), xy_overlap=(0.5, 0.5)):
     # If x and/or y start/stop positions not defined, set to image size
-    if x_start_stop[0] == None:
+    if x_start_stop[0] is None:
         x_start_stop[0] = 0
-    if x_start_stop[1] == None:
+    if x_start_stop[1] is None:
         x_start_stop[1] = img.shape[1]
-    if y_start_stop[0] == None:
+    if y_start_stop[0] is None:
         y_start_stop[0] = 0
-    if y_start_stop[1] == None:
+    if y_start_stop[1] is None:
         y_start_stop[1] = img.shape[0]
     # Compute the span of the region to be searched
     xspan = x_start_stop[1] - x_start_stop[0]
@@ -162,7 +163,7 @@ def apply_threshold(heatmap, threshold):
 # Draws bounding boxes over an image
 def draw_labeled_bboxes(img, labels):
     # Iterate through all detected cars
-    for car_number in range(1, labels[1]+1):
+    for car_number in range(1, labels[1] + 1):
         # Find pixels with each car_number label value
         nonzero = (labels[0] == car_number).nonzero()
         # Identify x and y values of those pixels
@@ -171,6 +172,6 @@ def draw_labeled_bboxes(img, labels):
         # Define a bounding box based on min/max x and y
         bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
         # Draw the box on the image
-        cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
+        cv2.rectangle(img, bbox[0], bbox[1], (0, 0, 255), 6)
     # Return the image
     return img
