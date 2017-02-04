@@ -3,6 +3,7 @@ import matplotlib.image as mpimg
 from helper_functions import *
 
 
+# Obtains a feature vectur using preselected set of parameters
 def single_img_features_standard(image):
     # Standartize images to be floats
     if isinstance(image[0][0][0], np.float32):
@@ -50,7 +51,9 @@ def extract_features_standard(imgs):
 # Define a function you will pass an image
 # and the list of windows to be searched (output of slide_windows())
 def search_windows_standard(img, windows, clf, scaler):
+    # 1) Create an empty array for feature vectors
     all_features = []
+
     # 2) Iterate over all windows in the list
     for window in windows:
         # 3) Extract the test window from original image
@@ -59,12 +62,14 @@ def search_windows_standard(img, windows, clf, scaler):
         features = single_img_features_standard(test_img)
         # 5) Scale extracted features to be fed to classifier
         test_features = scaler.transform(np.array(features).reshape(1, -1))
-
+        # 6) Put extracted features in the feature vector
         all_features.extend(test_features)
 
+    # 7) Using a classifier predict classes for feature vectors
     predictions = clf.predict(all_features)
 
+    # 8) Convert predictions array of windows that have vehicles
     on_windows = np.array(windows)[predictions == 1]
 
-    # 8) Return windows for positive detections
+    # 9) Return windows for positive detections
     return on_windows
