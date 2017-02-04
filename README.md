@@ -45,7 +45,7 @@ Then for each image I've defined set of parameters to be used in HOG extraction.
 
 Then I converted images to the `YUV` color space in the function `single_img_features`, located in the `helper_functions.py` file.
 
-Then I used `skimage.feature.hog()` function to extract a feature vector from each channel using function `get_hog_features` located in `helper_functions.py` file.
+Then I used `skimage.feature.hog()` function to extract a feature vector from each channel in function `get_hog_features` from `helper_functions.py` file.
 
 ####2. Explain how you settled on your final choice of HOG parameters.
 
@@ -89,7 +89,7 @@ Observing the video I noticed that cars that are far away tend to be located tow
 
 I've obtained a few images from the video where my pipeline had most problems, and tried to optimize those by changing the sliding windows.
 
-I've started with sizes `64x64`, `96x96`, `128x128`, `160x160`, `192x192`, `224x224` and `256x256` and overlap `0.5`. That produced good results, but it missed some smallest and largest cars. I was able to improve it by increasing horizontal overlap to `0.75` for smallest windows, and adding size `320x320`. However at that point execution time started to suffer - it could take two and a half hours to produce the project view.
+I've started with sizes `64x64`, `96x96`, `128x128`, `160x160`, `192x192`, `224x224` and `256x256` and overlap `0.5`. That produced good results, but it missed some smallest and largest cars. I was able to improve it by increasing horizontal overlap to `0.85` for smallest window, and adding size `320x320`. However at that point execution time started to suffer - it could take two and a half hours to produce the project view.
 
 As a next step, I've tried to reduce number of window and overlaps to improve execution time. I've noticed that bigger windows needed smaller overlaps to perform well, and that I can also reduce number of different sizes without loosing detection quality. After this optimization, when combined with "lighter" feature extraction option described above, pipeline can produce couple of frames a second.
 
@@ -132,7 +132,7 @@ image_height = image.shape[0]
 
 `slide_window` function outputs bounding boxes for windows with corresponding parameters.
 
-Next I search for windows using `search_windows_standard` function form `extract_features.py` file. This function for each window obtains a scaled image, extract features for that image, and forms an array of all features extracted for all windows. Then, using SVM, function performs prediction. Array of windows where cars are predicted is returned from the function.
+Next I search for windows using `search_windows_standard` function form `extract_features.py` file. This function for each window obtains a scaled image, extract features for that image, and forms an array of all features extracted for all windows. Then, using SVM, function performs prediction. An array of bounding boxes of windows where cars are predicted is returned from the function.
 
 Here is an example of the array of windows, each of which recognized a car:
 
@@ -144,31 +144,33 @@ In order to minimize false positives I've tried heat maps and threshing. I've bu
 
 Next I've tried to improve detection quality to have less false positives. I've checked standalone performance of each component forming the feature vector: binned color features, histogram and HOG. By combining best results I was able to achieve 99% accuracy, while before I was at 98%. However that did not help to get rid of false positives, and also increased time needed to process video significantly.
 
-Next I've tried to use many windows with `0.75` overlap. That gave me a huge performance hit - one video generation took two and a half hours. But it also did not produce desired result - windows of different sizes seem to agree where they see a car. This is probably due to some scaling used in the dataset.
+Next I've tried to use many windows with `0.85` overlap. That gave me a huge performance hit - one video generation took two and a half hours. But it also did not produce desired result - windows of different sizes seem to agree where they see a car. This is probably due to some scaling used in the dataset.
+
+Next I reduced number of windows, and only used `0.85` overlap for the smallest windows. Smallest windows seem to need bigger overlap, because there is no even smaller windows that can aid with detection. That improved the execution time and reduced both false negatives and false positives.
 
 After this I shifted my attention to filtering false positives on video pipeline level, which is described below.
 
-You can find code for heatmap and threshing in the `find_cars_in_image` function in the `find_cars_in_image.py` file. `add_heat` function from `helper_functions.py` adds 1 for every area marked by bounding box corresponding to found vehicle. Then `apply_threshold` function from same file zeros out all parts of heat map that are below given threshold (in my case, `1`). `label` function from `scipy.ndimage.measurements` finds bounding boxes for the heat map. Finally, `draw_labeled_bboxes` function from `helper_functions.cpp` draws bounding boxes on the image.
+You can find code for heat map and threshing in the `find_cars_in_image` function in the `find_cars_in_image.py` file. `add_heat` function from `helper_functions.py` adds 1 for every area marked by bounding box corresponding to found vehicle. Then `apply_threshold` function from same file zeros out all parts of heat map that are below given threshold (in my case, `1`). `label` function from `scipy.ndimage.measurements` finds bounding boxes for the heat map. Finally, `draw_labeled_bboxes` function from `helper_functions.py` draws bounding boxes on the image.
 
-Here is an example of heatmap with bounding boxes:
+Here is an example of heat map with bounding boxes:
 
-![Sliding windows and heatmap][image4]
+![Sliding windows and heat map][image4]
 ---
 
 ### Video Implementation
 
 ####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result][video1]
 
 
 ####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
-To filter false positives for video I used hot window history from previous frames. I took last 30 frames and produced weighted average for square roots of heat maps. Result of this operation was used as a new heat map.
+To filter false positives for video I used hot window history from previous frames. I took last 15 frames and produced weighted average for square roots of heat maps. Result of this operation was used as a new heat map.
 
 For a weighted average I used sine function, since I wanted more recent frames to have greater influence then older ones. This helped me to smooth the bounding box jarring and reject false positives that are only present on a few frames, but not the rest of them.
 
-In order to mitigate influence of one frame on the final outcome, I have applied a square root to the feat maps. This assures that there is no one super-confident frame that will introduce false positive, even though there is no detections in that area in consecutive frames.
+In order to mitigate influence of one frame on the final outcome, I have applied a square root to the heat maps. This assures that there is no one super-confident frame that will introduce false positive, even though there is no detections in that area in consecutive frames.
 
 Code for this feature can be found in the `find_cars_in_image` function, file `find_cars_in_image.py`.
 
@@ -211,9 +213,9 @@ if prev_hot_windows is not None:
     heat_threshold *= look_back_count
 ```
 
-Here's an example result showing the heatmap and bounding boxes overlaid on a frame of video:
+Here's an example result showing the heat map and bounding boxes overlaid on a frame of video:
 
-![Hetmap in video frame][image5]
+![Heat map in video frame][image5]
 
 ---
 
@@ -221,8 +223,8 @@ Here's an example result showing the heatmap and bounding boxes overlaid on a fr
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Detection accuracy was not best for the video, so I had to compensate by handpicking parameters and extensively using history. Handpicking parameters may fail in real world, and history needs multiple frames to kick in. Also, each frame takes at least half a second to produce on my machine, which is not acceptable in production.
+Detection accuracy was not the best for the video, so I had to compensate by handpicking parameters and extensively using history. Handpicking parameters may fail in real world, and history needs multiple frames to kick in. Also, each frame takes at least half a second to produce on my machine, which is not acceptable in production.
 
 In real world U-net seem to be a great idea. They are fast and very accurate.
 
-Another idea is to augment the data we have by adding and removing light, stretching, etc. This should make it work better on the video. Finally, I could try using different data set in addition to the current ones. [Udacity annotated driving data set](https://github.com/udacity/self-driving-car/tree/master/annotations) seem to be a better match in terms of lighting conditions at least.
+Another idea is to augment the data we have by adding and removing light, stretching, etc. This should make it work better on the video, since we can achieve 99% accuracy on the dataset, but not on the video. Finally, I could try using different data set in addition to the current ones. [Udacity annotated driving data set](https://github.com/udacity/self-driving-car/tree/master/annotations) seem to be a better match for the video in terms of lighting conditions at least.
