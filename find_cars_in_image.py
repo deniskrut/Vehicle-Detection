@@ -76,21 +76,22 @@ def find_cars_in_image(image, prev_hot_windows=None):
 
     # If we a processing a video, we might have hot windows information from previous frames
     if prev_hot_windows is not None:
-        # We look back 30 frames.
-        # It is a lot, but I use heat map cooling to negate negative effect of too many look back frames.
-        look_back_count = 30
+        # We look back 15 frames.
+        # It is significant number, but I use heat map cooling to negate negative effect of too many look back frames.
+        look_back_count = 15
 
         # Iterate through each historical hot window
         for index, cur_hot_windows in enumerate(prev_hot_windows):
             # Cooling function: sine loss of heat to give newer frames higher value
-            amount = math.sin((math.pi / 2) * (index / len(prev_hot_windows)))
+            scaler = math.sin((math.pi / 2) * (index / len(prev_hot_windows)))
 
             # Allocate new heat map
             current_heatmap = np.zeros_like(image[:, :, 0]).astype(np.float)
             # Add heat to the heat map
-            add_heat(current_heatmap, cur_hot_windows, amount)
+            add_heat(current_heatmap, cur_hot_windows)
             # Take square root of heat map to reduce potential influence of one frame
-            current_heatmap = np.sqrt(current_heatmap)
+            # Also apply scaler after the sqrt to keep the descending curve (so all numbers are >= 1 for sqrt)
+            current_heatmap = np.sqrt(current_heatmap) * scaler
             # Add current heat map to heat map of this frame
             heatmap += current_heatmap
 
