@@ -15,8 +15,8 @@ The goals / steps of this project are the following:
 [image2a]: ./examples/yuv_0.png
 [image2b]: ./examples/yuv_1.png
 [image2c]: ./examples/yuv_2.png
-[image3]: ./examples/sliding_windows.jpg
-[image4]: ./examples/sliding_window.jpg
+[image3]: ./examples/sliding_windows_1.png
+[image4]: ./examples/sliding_windows_2.png
 [image5]: ./examples/heatmap.png
 [image6]: ./examples/example_output.jpg
 [video1]: ./project_video_solution.mp4
@@ -72,7 +72,7 @@ hog_feat = True     # HOG features on or off
 
 SVM training code is located in the `train_classifier.py` file. Initially I read all the car and non-car images using `glob.glob()`.
 
-Then I extracted all features using function `extract_features_standard` from `extract_features.py` file. That function uses spatial, histogram and HOG features to form an array of feature vectors.
+Then I extracted all features using function `extract_features_standard` from `extract_features.py` file. That function uses binned colors, histogram and HOG features to form an array of feature vectors.
 
 Then I scaled all features using `StandardScaler` from `sklearn.preprocessing`.
 
@@ -88,13 +88,13 @@ Finally, I saved scaler and SVM model to the files using `joblib`.
 
 Observing the video I noticed that cars that are far away tend to be located toward the middle of the image height-wise, while cars that are closer to the camera can span between the middle of the image height-wise and the bottom of the image. So I located my sliding windows respectively.
 
-I've obtained a few images from the video where my pipeline had most problems, and tried to optimize those by changing the sliding windows. Another variable I was trying to optimize was execution time. It was clear that adding more windows created a lot of overhead.
+I've obtained a few images from the video where my pipeline had most problems, and tried to optimize those by changing the sliding windows.
 
 I've started with sizes `64x64`, `96x96`, `128x128`, `160x160`, `192x192`, `224x224` and `256x256` and overlap `0.5`. That produced good results, but it missed some smallest and largest cars. I was able to improve it by increasing horizontal overlap to `0.75` for smallest windows, and adding size `320x320`. However at that point execution time started to suffer - it could take two and a half hours to produce the project view.
 
 As a next step, I've tried to reduce number of window and overlaps to improve execution time. I've noticed that bigger windows needed smaller overlaps to perform well, and that I can also reduce number of different sizes without loosing detection quality.
 
-Code for this procedure is located in the `find_cars_in_image` function, `file_cars_in_image.py` file. This function uses caching for SVM, Scaler and sliding windows to improve performance. On the first execution of the function I read SVM and scaler from files and generate sliding windows. In order to generate sliding windows I assign sizes, search areas and overlaps. Here is what these parameters look like:
+Code for this procedure is located in the `find_cars_in_image` function, `file_cars_in_image.py` file. This function uses caching for SVM, Scaler and sliding windows to improve performance. On the first execution of the function I read SVM and scaler from files and generate sliding windows. In order to generate sliding windows I assign sizes, search areas and overlaps and supply it to `slide_window` function located in `helper_functions.py`. Here is what these parameters look like:
 
 ```python
 import matplotlib.image as mpimg
@@ -123,31 +123,29 @@ windows_320 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_star
                            xy_window=(320, 320), xy_overlap=(0.6, 0.5))
 ```
 
+`slide_window` function outputs bounding boxes for windows with corresponding parameters.
+
 Next I search for windows using `search_windows_standard` function form `extract_features.py` file. This function for each window obtains a scaled image, extract features for that image, and forms an array of all features extracted for all windows. Then, using SVM, function performs prediction. Array of windows where cars are predicted is returned from the function.
 
-TODO
+Here is an example of the array of windows, each of which recognized a car:
 
-In order to combat false positives I've tried to use many windows with `0.75` overlap. That gave me a huge performance hit - one video generation took 2 and a half hours. But it also did not produce desired result - windows of different sizes seem to agree where they see a car. This is probably due to some scaling used in the dataset.
+![Sliding windows][image3]
 
-TODO
+####2. Show some examples of test images to demonstrate how your pipeline is working. What did you do to try to minimize false positives and reliably detect cars?
 
-So I reduced number of windows. I used `0.75` horizontal overlap for the top window of size `64x64`, for all other sizes and dimensions I used overlap of `0.5`. I also used windows of sizes `96x96`, `128x128`, `160x160`, `192x192`, `224x224` and `256x256`
+In order to minimize false positives I've tried heat maps and threshing. I've built a heat map for all found cars, and made a threshold to cut off false positives. However this did not seem enough - there were some false negatives having same threshold as false positives.
 
-TODO
+Next I've tried to improve detection quality to have less false positives. I've checked standalone performance of each component forming the feature vector: binned color features, histogram and HOG. By combining best results I was able to achieve 99% accuracy, while before I was at 98%. However that did not help to get rid of false positives, and also increased time needed to process video significantly.
 
-![alt text][image3]
-
-####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to try to minimize false positives and reliably detect cars?
-
-In order to minimize false positives I've tried threshing. I've built a heat map for all found cars, and made a threshold to cut off false positives. However this did not seem enough - there were some false negatives having same threshold as false positives.
-
-Then I've tried using more search windows and higher threshold. That did not helped, as described in previous section.
+Next I've tried to use many windows with `0.75` overlap. That gave me a huge performance hit - one video generation took two and a half hours. But it also did not produce desired result - windows of different sizes seem to agree where they see a car. This is probably due to some scaling used in the dataset.
 
 After this I shifted my attention to filtering false positives on video pipeline level, which is described below.
 
-TODO
+You can find code for heatmap and threshing in the `find_cars_in_image` function in the `find_cars_in_image.py` file. `add_heat` function from `helper_functions.py` adds 1 for every area marked by bounding box corresponding to found vehicle. Then `apply_threshold` function from same file zeros out all parts of heat map that are below given threshold (in my case, `1`). `label` function from `scipy.ndimage.measurements` finds bounding boxes for the heat map. Finally, `draw_labeled_bboxes` function from `helper_functions.cpp` draws bounding boxes on the image.
 
-![alt text][image4]
+Here is an example of heatmap with bounding boxes:
+
+![Sliding windows and heatmap][image4]
 ---
 
 ### Video Implementation

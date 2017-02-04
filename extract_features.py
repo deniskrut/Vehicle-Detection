@@ -69,7 +69,7 @@ def search_windows_standard(img, windows, clf, scaler):
     predictions = clf.predict(all_features)
 
     # 8) Convert predictions array of windows that have vehicles
-    on_windows = np.array(windows)[predictions == 1]
+    on_windows = [x for i, x in enumerate(windows) if predictions[i] == 1]
 
     # 9) Return windows for positive detections
     return on_windows
