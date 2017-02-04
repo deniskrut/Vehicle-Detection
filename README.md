@@ -18,7 +18,6 @@ The goals / steps of this project are the following:
 [image3]: ./examples/sliding_windows_1.png
 [image4]: ./examples/sliding_windows_2.png
 [image5]: ./examples/heatmap.png
-[image6]: ./examples/example_output.jpg
 [video1]: ./project_video_solution.mp4
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
@@ -56,7 +55,7 @@ I explored different color spaces and different `skimage.feature.hog()` paramete
 ![YUV channel 1][image2b]
 ![YUV channel 2][image2c]
 
-I've estimated the classification performance of given set of parameters by training and testing the classifier on just HOG output. I've learned that `pixel_per_cell == 16` and `hog_channel == 0` produce almost as good classification as `pixel_per_cell == 8` and `hog_channel == "ALL"`, while taking much less time to execute. I've adjusted other parameters of the pipeline on the former, and then switched to the later.
+I've estimated the classification performance of given set of parameters by training and testing the classifier on just HOG output. I've learned that `pixel_per_cell == 16` and `hog_channel == 0` produce almost as good classification as `pixel_per_cell == 8` and `hog_channel == "ALL"` (98% vs 99% accuracy), while taking much less time to execute. I've adjusted other parameters of the pipeline on the former, and then switched to the later.
 
 Following parameters produced best classification accuracy, so these are my final parameters:
 
@@ -92,7 +91,7 @@ I've obtained a few images from the video where my pipeline had most problems, a
 
 I've started with sizes `64x64`, `96x96`, `128x128`, `160x160`, `192x192`, `224x224` and `256x256` and overlap `0.5`. That produced good results, but it missed some smallest and largest cars. I was able to improve it by increasing horizontal overlap to `0.75` for smallest windows, and adding size `320x320`. However at that point execution time started to suffer - it could take two and a half hours to produce the project view.
 
-As a next step, I've tried to reduce number of window and overlaps to improve execution time. I've noticed that bigger windows needed smaller overlaps to perform well, and that I can also reduce number of different sizes without loosing detection quality.
+As a next step, I've tried to reduce number of window and overlaps to improve execution time. I've noticed that bigger windows needed smaller overlaps to perform well, and that I can also reduce number of different sizes without loosing detection quality. After this optimization, when combined with "lighter" feature extraction option described above, pipeline can produce couple of frames a second.
 
 Code for this procedure is located in the `find_cars_in_image` function, `file_cars_in_image.py` file. This function uses caching for SVM, Scaler and sliding windows to improve performance. On the first execution of the function I read SVM and scaler from files and generate sliding windows. In order to generate sliding windows I assign sizes, search areas and overlaps and supply it to `slide_window` function located in `helper_functions.py`. Here is what these parameters look like:
 
