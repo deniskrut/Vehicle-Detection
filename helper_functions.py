@@ -33,7 +33,6 @@ def bin_spatial(img, size=(32, 32)):
 
 
 # Define a function to compute color histogram features
-# NEED TO CHANGE bins_range if reading .png files with mpimg!
 def color_hist(img, nbins=32, bins_range=(0, 256)):
     # Compute the histogram of the color channels separately
     channel1_hist = np.histogram(img[:, :, 0], bins=nbins, range=bins_range)
@@ -139,6 +138,7 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
     return window_list
 
 
+# Adds heat to the heatmap, based on bounding boxes received
 def add_heat(heatmap, bbox_list, amount=1):
     # Iterate through list of bboxes
     for box in bbox_list:
@@ -150,13 +150,16 @@ def add_heat(heatmap, bbox_list, amount=1):
     return heatmap
 
 
+# Applies threshold to the heatmap, zeroing out anything below the threshold
 def apply_threshold(heatmap, threshold):
+    new_heatmap = np.copy(heatmap)
     # Zero out pixels below the threshold
-    heatmap[heatmap <= threshold] = 0
+    new_heatmap[heatmap <= threshold] = 0
     # Return thresholded map
-    return heatmap
+    return new_heatmap
 
 
+# Draws bounding boxes over an image
 def draw_labeled_bboxes(img, labels):
     # Iterate through all detected cars
     for car_number in range(1, labels[1]+1):

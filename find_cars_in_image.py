@@ -1,3 +1,5 @@
+import math
+
 from scipy.ndimage.measurements import label
 from sklearn.externals import joblib
 
@@ -32,34 +34,42 @@ def find_cars_in_image(image, prev_hot_windows=None):
         y_start_stop_128 = [int(0.525 * image_height), int(0.75 * image_height)]
         y_start_stop_160 = [int(0.525 * image_height), int(0.775 * image_height)]
         y_start_stop_192 = [int(0.525 * image_height), int(0.8 * image_height)]
-        y_start_stop_224 = [int(0.525 * image_height), int(0.825 * image_height)]
-        y_start_stop_256 = [int(0.525 * image_height), int(0.85 * image_height)]
+        y_start_stop_224 = [int(0.525 * image_height), int(0.85 * image_height)]
+        y_start_stop_256 = [int(0.525 * image_height), int(0.9 * image_height)]
+        y_start_stop_288 = [int(0.525 * image_height), int(0.95 * image_height)]
+        y_start_stop_320 = [int(0.525 * image_height), int(1 * image_height)]
 
         # Obtain windows given set of parameters
         windows_64 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_64,
                                   xy_window=(64, 64), xy_overlap=(0.75, 0.5))
         windows_96 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_96,
-                                  xy_window=(96, 96), xy_overlap=(0.5, 0.5))
+                                  xy_window=(96, 96), xy_overlap=(0.7, 0.5))
         windows_128 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_128,
-                                   xy_window=(128, 128), xy_overlap=(0.5, 0.5))
+                                   xy_window=(128, 128), xy_overlap=(0.65, 0.5))
         windows_160 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_160,
-                                   xy_window=(160, 160), xy_overlap=(0.5, 0.5))
+                                   xy_window=(160, 160), xy_overlap=(0.6, 0.5))
         windows_192 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_192,
-                                   xy_window=(192, 192), xy_overlap=(0.5, 0.5))
+                                   xy_window=(192, 192), xy_overlap=(0.6, 0.5))
         windows_224 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_224,
-                                   xy_window=(224, 224), xy_overlap=(0.5, 0.5))
+                                   xy_window=(224, 224), xy_overlap=(0.6, 0.5))
         windows_256 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_256,
-                                   xy_window=(256, 256), xy_overlap=(0.5, 0.5))
+                                   xy_window=(256, 256), xy_overlap=(0.6, 0.5))
+        windows_288 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_288,
+                                   xy_window=(288, 288), xy_overlap=(0.6, 0.5))
+        windows_320 = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_320,
+                                   xy_window=(320, 320), xy_overlap=(0.6, 0.5))
 
         # Store all windows
         windows = []
         windows.extend(windows_64)
-        windows.extend(windows_96)
+        # windows.extend(windows_96)
         windows.extend(windows_128)
-        windows.extend(windows_160)
+        # windows.extend(windows_160)
         windows.extend(windows_192)
-        windows.extend(windows_224)
+        #windows.extend(windows_224)
         windows.extend(windows_256)
+        # windows.extend(windows_288)
+        windows.extend(windows_320)
 
         # Store windows in cache
         find_cars_in_image_windows = windows
@@ -88,8 +98,8 @@ def find_cars_in_image(image, prev_hot_windows=None):
 
         # Iterate through each historical hot window
         for index, cur_hot_windows in enumerate(prev_hot_windows):
-            # Cooling function: linear loss of heat depending on how old given frame is
-            amount = index / len(prev_hot_windows)
+            # Cooling function: sine loss of heat to give newer frames higher value
+            amount = math.sin((math.pi / 2) * (index / len(prev_hot_windows)))
 
             # Allocate new heatmap
             current_heatmap = np.zeros_like(image[:, :, 0]).astype(np.float)
@@ -108,16 +118,21 @@ def find_cars_in_image(image, prev_hot_windows=None):
         prev_hot_windows.append(hot_windows)
 
         # Adjust threshold to accommodate added heat
-        heat_threshold *= (look_back_count / 2)
+        heat_threshold *= look_back_count
 
     # Apply threshold to the heatmap
-    heatmap = apply_threshold(heatmap, heat_threshold)
+    heatmap_thresholded = apply_threshold(heatmap, heat_threshold)
 
     # Obtain bounding boxes for interconnected heatmap areas
-    labels = label(heatmap)
+    labels = label(heatmap_thresholded)
 
     # Draw labeled bounding boxes based on labels
     window_img = draw_labeled_bboxes(image, labels)
 
+    heatmap_overlay = np.uint8(
+        np.dstack([(heatmap / np.max([np.max(heatmap), 1])) * 255, np.zeros_like(heatmap), np.zeros_like(heatmap)]))
+
+    window_img_heatmap = cv2.addWeighted(window_img, 1, heatmap_overlay, .5, 0)
+
     # Return resulting image and previous hot windows
-    return window_img, prev_hot_windows
+    return window_img_heatmap, prev_hot_windows

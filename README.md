@@ -17,7 +17,7 @@ The goals / steps of this project are the following:
 [image2c]: ./examples/yuv_2.png
 [image3]: ./examples/sliding_windows.jpg
 [image4]: ./examples/sliding_window.jpg
-[image5]: ./examples/img50.jpg
+[image5]: ./examples/heatmap.png
 [image6]: ./examples/example_output.jpg
 [video1]: ./project_video_solution.mp4
 
@@ -90,6 +90,8 @@ Observing the video I noticed that cars that are far away tend to be located tow
 
 In order to combat false positives I've tried to use many windows with `0.75` overlap. That gave me a huge performance hit - one video generation took 2 and a half hours. But it also did not produce desired result - windows of different sizes seem to agree where they see a car. This is probably due to some scaling used in the dataset.
 
+TODO
+
 So I reduced number of windows. I used `0.75` horizontal overlap for the top window of size `64x64`, for all other sizes and dimensions I used overlap of `0.5`. I also used windows of sizes `96x96`, `128x128`, `160x160`, `192x192`, `224x224` and `256x256`
 
 TODO
@@ -98,7 +100,7 @@ TODO
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to try to minimize false positives and reliably detect cars?
 
-In order to minimize false positives I've tried thresholding. I've built a heat map for all found cars, and made a threshold to cut off false positives. However this did not seem enough - there were some false negatives having same threshold as false positives.
+In order to minimize false positives I've tried threshing. I've built a heat map for all found cars, and made a threshold to cut off false positives. However this did not seem enough - there were some false negatives having same threshold as false positives.
 
 Then I've tried using more search windows and higher threshold. That did not helped, as described in previous section.
 
@@ -123,8 +125,6 @@ TODO
 I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then threshold that map to identify vehicle positions.  I then used blob detection in Sci-kit Image (Determinant of a Hessian [`skimage.feature.blob_doh()`](http://scikit-image.org/docs/dev/auto_examples/plot_blob.html) worked best for me) to identify individual blobs in the heatmap and then determined the extent of each blob using [`skimage.morphology.watershed()`](http://scikit-image.org/docs/dev/auto_examples/plot_watershed.html). I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
 
 Here's an example result showing the heatmap and bounding boxes overlaid on a frame of video:
-
-TODO
 
 ![alt text][image5]
 
