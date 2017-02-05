@@ -36,7 +36,7 @@ You're reading it!
 
 The code for this step is performed by the `extract_features_standard` function, located in the `extract_features.py` file.  
 
-I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
+I started by reading in all the [vehicle](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/vehicles.zip) and [non-vehicle](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/non-vehicles.zip) images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
 ![Car][image1a]
 ![Not car][image1b]
